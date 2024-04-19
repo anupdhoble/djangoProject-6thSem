@@ -1,5 +1,4 @@
 # views.py
-
 from django.http import JsonResponse
 from django.conf import settings
 from rest_framework import status
