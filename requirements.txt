@@ -1,10 +1,10 @@
 Django~=4.2.11
 numpy~=1.26.4
-tensorflow~=2.15.0
+tensorflow~=2.6.0  # Updated TensorFlow version to be compatible with Keras
 djangorestframework~=3.15.1
-keras~=3.1.1
+keras~=2.6.0  # Updated Keras version to be compatible with TensorFlow
 pillow~=10.3.0
 opencv-python~=4.9.0.80
-scipy~=1.13.0
-scikit-image~=0.22.0
-requests~=2.31.0
+scipy~=1.7.3  # Updated scipy version for compatibility
+scikit-image~=0.18.3  # Updated scikit-image version for compatibility
+requests~=2.26.0  # Updated requests version for compatibility
