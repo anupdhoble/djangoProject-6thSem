@@ -1,3 +1,5 @@
+# views.py
+
 from django.http import JsonResponse
 from django.conf import settings
 from rest_framework import status
@@ -5,59 +7,66 @@ import os
 import numpy as np
 import tensorflow as tf
 from rest_framework.decorators import api_view
-from tensorflow.keras.models import load_model
+from keras.models import load_model
 from PIL import Image
+from .preprocessing import preprocess_image
+import requests
+
+# Define the URL where your model file is hosted on the cloud storage service
+MODEL_URL = "https://drive.usercontent.google.com/download?id=1qTP4BLyTKTu4ZUixjp-374fuEHRhZIBq&export=download&authuser=0&confirm=t&uuid=baea5119-2f97-4e00-9556-276859637661&at=APZUnTV-lM4SLT_L_1gjGEbnpsKn%3A1713535933249"
+
+# Download the model file only once when the Django application starts up
+model_path = os.path.join(settings.BASE_DIR, 'model.h5')
+if not os.path.exists(model_path):
+    print("Downloading model file...")
+    response = requests.get(MODEL_URL)
+    with open(model_path, "wb") as f:
+        f.write(response.content)
+    print("Model Download completed")
+else:
+    print("\nModel file already exists\n")
 
 # Load the pre-trained .h5 model
-model = load_model(os.path.join(settings.BASE_DIR, 'cnn_model.h5'))
+model = load_model(model_path)
 
-
-# Define the classify_signature view
+# Define the classify_signature view using the imported preprocessing functions
 @api_view(['POST'])
 def classify_signature(request):
     if request.method == 'POST' and request.FILES.get('image'):
         image = request.FILES['image']
 
-        # Load the image
-        img = Image.open(image)
-        img = img.convert('L')  # Convert to grayscale
+        # Preprocess the image
+        preprocessed_image = preprocess_image(image)
 
-        # Resize the image to match the model input shape
-        img = img.resize((400, 100))  # Assuming the model expects input shape (100, 400)
+        if preprocessed_image is not None:
+            img_array = tf.keras.preprocessing.image.img_to_array(preprocessed_image)
+            img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
 
-        # Convert image to array
-        img_array = tf.keras.preprocessing.image.img_to_array(img)
-        img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+            # Make predictions
+            predictions = model.predict(img_array)
+            predicted_class_index = np.argmax(predictions)
+            if predicted_class_index == 0:
+                result = 'Genuine'
+            else:
+                result = 'Fake'
 
-        # Make predictions
-        predictions = model.predict(img_array)
-        prediction = predictions[0][0]  # Assuming a binary classification (fake/genuine)
+            # Calculate confidence
+            confidence = np.max(predictions)
 
-        # Calculate confidence
-        confidence = float(prediction)
+            # Convert confidence to native Python float
+            confidence = float(confidence)
 
-        # Return results
-        if prediction >= 0.5:
-            result = 'Genuine'
+            # Create JSON response
+            response_data = {
+                'message': 'Signature classified successfully',
+                'result': result,
+                'confidence': confidence
+            }
+            print("Response Data: ", response_data)
+            return JsonResponse(response_data, status=status.HTTP_200_OK)
         else:
-            result = 'Fake'
-            confidence = 1 - confidence
-
-        # Save the received image
-        received_images_dir = os.path.join(settings.MEDIA_ROOT, 'received_images')
-        if not os.path.exists(received_images_dir):
-            os.makedirs(received_images_dir)
-        received_image_path = os.path.join(received_images_dir, image.name)
-        img.save(received_image_path)
-
-        # Create JSON response
-        response_data = {
-            'message': 'Signature classified successfully',
-            'result': result,
-            'confidence': confidence
-        }
-        print("Response Data: ", response_data)
-        return JsonResponse(response_data, status=status.HTTP_200_OK)
+            # Return an error response if image preprocessing fails
+            return JsonResponse({'error': 'Image preprocessing failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         # Return an error response if no image is provided
         return JsonResponse({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
