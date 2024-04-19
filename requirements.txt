@@ -1,3 +1,4 @@
+corsheaders~=3.9.0
 Django~=4.2.11
 numpy~=1.26.4
 keras~=2.15.0
