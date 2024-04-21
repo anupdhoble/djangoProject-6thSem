@@ -4,6 +4,7 @@ from django.conf import settings
 from rest_framework import status
 import os
 import numpy as np
+from .models import Signature
 import tensorflow as tf
 from rest_framework.decorators import api_view
 from keras.models import load_model
@@ -54,7 +55,8 @@ def classify_signature(request):
 
             # Convert confidence to native Python float
             confidence = float(confidence)
-
+            signature = Signature(image=image, result=result, confidence=confidence)
+            signature.save()
             # Create JSON response
             response_data = {
                 'message': 'Signature classified successfully',
