@@ -13,8 +13,8 @@ from .preprocessing import preprocess_image
 import requests
 
 # Define the URL where your model file is hosted on the cloud storage service
-MODEL_URL = "https://drive.usercontent.google.com/download?id=1qTP4BLyTKTu4ZUixjp-374fuEHRhZIBq&export=download&authuser=0&confirm=t&uuid=baea5119-2f97-4e00-9556-276859637661&at=APZUnTV-lM4SLT_L_1gjGEbnpsKn%3A1713535933249"
-
+# MODEL_URL = "https://drive.usercontent.google.com/download?id=1qTP4BLyTKTu4ZUixjp-374fuEHRhZIBq&export=download&authuser=0&confirm=t&uuid=baea5119-2f97-4e00-9556-276859637661&at=APZUnTV-lM4SLT_L_1gjGEbnpsKn%3A1713535933249"
+MODEL_URL="https://drive.usercontent.google.com/download?id=1dQ58rbbu62sXsHApAT2r8D_LjDunWL_n&export=download&authuser=2&confirm=t&uuid=50ad4660-ea26-40db-a163-394e25d4bf24&at=APZUnTXuPrkSwITP1vPOoDfim45o:1719642721843"
 # Download the model file only once when the Django application starts up
 model_path = os.path.join(settings.BASE_DIR, 'model.h5')
 if not os.path.exists(model_path):
